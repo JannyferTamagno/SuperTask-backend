@@ -149,26 +149,74 @@ def dashboard_stats(request):
 @api_view(['GET'])
 @permission_classes([permissions.IsAuthenticated])
 def daily_quote(request):
-    """Endpoint para buscar citação diária da API externa"""
-    try:
-        response = requests.get('https://api.quotable.io/random')
-        if response.status_code == 200:
-            quote_data = response.json()
-            return Response({
-                'quote': quote_data.get('content'),
-                'author': quote_data.get('author')
-            })
-        else:
-            return Response({
-                'quote': 'Success is not final, failure is not fatal: It is the courage to continue that counts.',
-                'author': 'Winston Churchill'
-            })
-    except Exception as e:
-        # Fallback quote em caso de erro
-        return Response({
+    """Endpoint para buscar citação diária usando API quotable.io/quotes/random"""
+    
+    # Lista de citações motivacionais em inglês como backup
+    fallback_quotes = [
+        {
             'quote': 'The only way to do great work is to love what you do.',
             'author': 'Steve Jobs'
-        })
+        },
+        {
+            'quote': 'Success is not final, failure is not fatal: It is the courage to continue that counts.',
+            'author': 'Winston Churchill'
+        },
+        {
+            'quote': 'The future belongs to those who believe in the beauty of their dreams.',
+            'author': 'Eleanor Roosevelt'
+        },
+    ]
+    
+    try:
+        # Usando o endpoint correto da API quotable
+        response = requests.get('https://api.quotable.io/quotes/random', timeout=10)
+        
+        if response.status_code == 200:
+            quote_data = response.json()
+            
+            # A API retorna um array, então pegamos o primeiro item
+            if isinstance(quote_data, list) and len(quote_data) > 0:
+                quote_item = quote_data[0]
+                external_quote = {
+                    'quote': quote_item.get('content'),
+                    'author': quote_item.get('author'),
+                    'source': 'quotable_api'
+                }
+                
+                # Verifica se não é uma citação vazia
+                if external_quote['quote'] and external_quote['author']:
+                    return Response(external_quote)
+            
+            # Se não retornou array ou está vazio, tenta como objeto único
+            elif isinstance(quote_data, dict):
+                external_quote = {
+                    'quote': quote_data.get('content'),
+                    'author': quote_data.get('author'),
+                    'source': 'quotable_api'
+                }
+                
+                if external_quote['quote'] and external_quote['author']:
+                    return Response(external_quote)
+        
+        # Se chegou aqui, a API externa falhou ou retornou dados inválidos
+        import random
+        selected_quote = random.choice(fallback_quotes)
+        selected_quote['source'] = 'fallback'
+        return Response(selected_quote)
+        
+    except requests.exceptions.Timeout:
+        # Timeout da API externa - usa fallback
+        import random
+        selected_quote = random.choice(fallback_quotes)
+        selected_quote['source'] = 'fallback_timeout'
+        return Response(selected_quote)
+        
+    except Exception as e:
+        # Qualquer outro erro - usa fallback
+        import random
+        selected_quote = random.choice(fallback_quotes)
+        selected_quote['source'] = 'fallback_error'
+        return Response(selected_quote)
 
 @api_view(['PATCH'])
 @permission_classes([permissions.IsAuthenticated])
