@@ -169,7 +169,7 @@ def daily_quote(request):
     
     try:
         # Usando o endpoint correto da API quotable
-        response = requests.get('https://api.quotable.io/quotes/random', timeout=10)
+        response = requests.get('http://api.quotable.io/quotes/random', timeout=10)
         
         if response.status_code == 200:
             quote_data = response.json()
