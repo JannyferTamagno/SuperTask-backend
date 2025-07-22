@@ -97,37 +97,54 @@ class TaskDetailView(generics.RetrieveUpdateDestroyAPIView):
 def dashboard_stats(request):
     """Endpoint para estatísticas do dashboard"""
     user = request.user
-    tasks = Task.objects.filter(user=user)
     
-    # Estatísticas básicas
-    completed = tasks.filter(status='completed').count()
-    in_progress = tasks.filter(status='in_progress').count()
-    overdue = tasks.filter(due_date__lt=date.today(), status__ne='completed').count()
-    high_priority = tasks.filter(priority='high', status__ne='completed').count()
-    due_today = tasks.filter(due_date=date.today(), status__ne='completed').count()
-    total_tasks = tasks.count()
-    
-    # Estatísticas por categoria
-    categories_stats = {}
-    for category in Category.objects.filter(user=user):
-        categories_stats[category.name] = {
-            'total': tasks.filter(category=category).count(),
-            'completed': tasks.filter(category=category, status='completed').count(),
-            'pending': tasks.filter(category=category, status__ne='completed').count(),
+    try:
+        tasks = Task.objects.filter(user=user)
+        
+        # Estatísticas básicas
+        completed = tasks.filter(status='completed').count()
+        in_progress = tasks.filter(status='in_progress').count()
+        overdue = tasks.filter(due_date__lt=date.today()).exclude(status='completed').count()
+        high_priority = tasks.filter(priority='high').exclude(status='completed').count()
+        due_today = tasks.filter(due_date=date.today()).exclude(status='completed').count()
+        total_tasks = tasks.count()
+        
+        # Estatísticas por categoria
+        categories_stats = {}
+        try:
+            categories = Category.objects.filter(user=user)
+            for category in categories:
+                category_tasks = tasks.filter(category=category)
+                categories_stats[category.name] = {
+                    'total': category_tasks.count(),
+                    'completed': category_tasks.filter(status='completed').count(),
+                    'pending': category_tasks.exclude(status='completed').count(),
+                }
+        except Exception as e:
+            print(f"Erro ao processar categorias: {e}")
+            categories_stats = {}
+        
+        data = {
+            'completed': completed,
+            'in_progress': in_progress,
+            'overdue': overdue,
+            'high_priority': high_priority,
+            'due_today': due_today,
+            'total_tasks': total_tasks,
+            'categories_stats': categories_stats
         }
-    
-    data = {
-        'completed': completed,
-        'in_progress': in_progress,
-        'overdue': overdue,
-        'high_priority': high_priority,
-        'due_today': due_today,
-        'total_tasks': total_tasks,
-        'categories_stats': categories_stats
-    }
-    
-    serializer = DashboardStatsSerializer(data)
-    return Response(serializer.data)
+        
+        serializer = DashboardStatsSerializer(data)
+        return Response(serializer.data)
+        
+    except Exception as e:
+        print(f"Erro no dashboard_stats: {e}")
+        import traceback
+        traceback.print_exc()
+        return Response({
+            'error': 'Erro interno do servidor',
+            'detail': str(e)
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 @api_view(['GET'])
 @permission_classes([permissions.IsAuthenticated])
