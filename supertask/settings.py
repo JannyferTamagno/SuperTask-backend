@@ -19,6 +19,8 @@ ALLOWED_HOSTS = [
     '127.0.0.1',
     '0.0.0.0',
     '.render.com',  # Para permitir subdomínios do Render
+    'supertask-api.onrender.com',  # Domínio específico
+    '*',  # Temporário para debug
 ]
 
 # Application definition
@@ -174,3 +176,26 @@ if not DEBUG:
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
     SECURE_HSTS_PRELOAD = True
     X_FRAME_OPTIONS = 'DENY'
+
+
+# Configuração de Logging
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+        },
+    },
+    'root': {
+        'handlers': ['console'],
+        'level': 'INFO',
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+    },
+}
