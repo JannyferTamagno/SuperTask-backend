@@ -162,13 +162,14 @@ class AuthenticationAPITest(APITestCase):
         
         self.client.force_authenticate(user=user)
         
+        # Use PATCH em vez de PUT para atualização parcial
         update_data = {
             'first_name': 'Updated',
             'last_name': 'Name',
             'email': 'updated@example.com'
         }
         
-        response = self.client.put(self.profile_url, update_data)
+        response = self.client.patch(self.profile_url, update_data)
         
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         
