@@ -151,14 +151,7 @@ SIMPLE_JWT = {
 }
 
 # CORS Settings
-if DEBUG:
-    CORS_ALLOW_ALL_ORIGINS = True
-else:
-    CORS_ALLOWED_ORIGINS = [
-        "https://your-frontend-domain.com",  # Substitua pelo domínio do seu frontend
-        "http://localhost:3000",  # Para desenvolvimento local do frontend
-        "http://127.0.0.1:3000",
-    ]
+CORS_ALLOW_ALL_ORIGINS = True
 
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOW_HEADERS = [
