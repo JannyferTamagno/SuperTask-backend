@@ -1,3 +1,4 @@
+# accounts/models.py
 from django.db import models
 from django.contrib.auth.models import User
 from django.db.models.signals import post_save
@@ -14,32 +15,10 @@ class UserProfile(models.Model):
         return f"{self.user.username}'s Profile"
 
 @receiver(post_save, sender=User)
-def create_user_profile_and_categories(sender, instance, created, **kwargs):
-    """Cria perfil do usuário e categorias padrão quando um novo usuário é criado"""
+def create_user_profile(sender, instance, created, **kwargs):
     if created:
-        # Criar perfil do usuário
         UserProfile.objects.create(user=instance)
-        
-        # Importar Category aqui para evitar import circular
-        from tasks.models import Category
-        
-        # Criar categorias padrão
-        default_categories = [
-            {"name": "Trabalho", "color": "#3b82f6"},
-            {"name": "Estudos", "color": "#10b981"},
-            {"name": "Lazer", "color": "#f59e0b"},
-            {"name": "Pessoal", "color": "#ef4444"},
-        ]
-        
-        for category_data in default_categories:
-            Category.objects.create(
-                name=category_data["name"],
-                color=category_data["color"],
-                user=instance
-            )
 
 @receiver(post_save, sender=User)
 def save_user_profile(sender, instance, **kwargs):
-    """Salva o perfil do usuário quando o usuário é salvo"""
-    if hasattr(instance, 'userprofile'):
-        instance.userprofile.save()
+    instance.userprofile.save()

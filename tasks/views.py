@@ -114,7 +114,6 @@ def dashboard_stats(request):
             status__in=['pending', 'in_progress']
         ).count()
         
-        total_tasks = tasks.count()
         
         # Debug das tarefas para hoje
         due_today_tasks = tasks.filter(due_date=today)
@@ -180,34 +179,6 @@ def daily_quote(request):
         {
             'quote': 'The future belongs to those who believe in the beauty of their dreams.',
             'author': 'Eleanor Roosevelt'
-        },
-        {
-            'quote': 'It is during our darkest moments that we must focus to see the light.',
-            'author': 'Aristotle'
-        },
-        {
-            'quote': 'The only impossible journey is the one you never begin.',
-            'author': 'Tony Robbins'
-        },
-        {
-            'quote': 'In the middle of difficulty lies opportunity.',
-            'author': 'Albert Einstein'
-        },
-        {
-            'quote': 'Believe you can and you\'re halfway there.',
-            'author': 'Theodore Roosevelt'
-        },
-        {
-            'quote': 'The way to get started is to quit talking and begin doing.',
-            'author': 'Walt Disney'
-        },
-        {
-            'quote': 'Don\'t let yesterday take up too much of today.',
-            'author': 'Will Rogers'
-        },
-        {
-            'quote': 'You learn more from failure than from success.',
-            'author': 'Unknown'
         }
     ]
     

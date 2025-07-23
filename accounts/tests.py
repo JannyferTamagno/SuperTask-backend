@@ -31,29 +31,6 @@ class UserModelTest(TestCase):
         self.assertTrue(hasattr(self.user, 'userprofile'))
         self.assertIsInstance(self.user.userprofile, UserProfile)
     
-    def test_default_categories_created_automatically(self):
-        """Testa se as categorias padrão são criadas automaticamente"""
-        # Importar Category para o teste
-        from tasks.models import Category
-        
-        # Verificar se as 4 categorias padrão foram criadas
-        user_categories = Category.objects.filter(user=self.user)
-        self.assertEqual(user_categories.count(), 4)
-        
-        # Verificar se as categorias esperadas foram criadas
-        expected_categories = ["Trabalho", "Estudos", "Lazer", "Pessoal"]
-        created_categories = list(user_categories.values_list('name', flat=True))
-        
-        for expected_name in expected_categories:
-            self.assertIn(expected_name, created_categories)
-        
-        # Verificar se as cores foram definidas corretamente
-        trabalho_category = user_categories.get(name="Trabalho")
-        self.assertEqual(trabalho_category.color, "#3b82f6")
-        
-        estudos_category = user_categories.get(name="Estudos")
-        self.assertEqual(estudos_category.color, "#10b981")
-    
     def test_user_profile_str_method(self):
         """Testa o método __str__ do UserProfile"""
         expected_str = f"{self.user.username}'s Profile"
@@ -89,28 +66,8 @@ class AuthenticationAPITest(APITestCase):
         self.assertIn('refresh', response.data)
         self.assertEqual(response.data['message'], 'User created successfully')
         
-    def test_user_registration_creates_default_categories(self):
-        """Testa se o registro cria categorias padrão automaticamente"""
-        # Importar Category para o teste
-        from tasks.models import Category
-        
-        response = self.client.post(self.register_url, self.user_data)
-        
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        
-        # Verificar se o usuário foi criado
-        user = User.objects.get(username='testuser')
-        
-        # Verificar se as categorias padrão foram criadas
-        user_categories = Category.objects.filter(user=user)
-        self.assertEqual(user_categories.count(), 4)
-        
-        # Verificar nomes das categorias
-        category_names = list(user_categories.values_list('name', flat=True))
-        expected_names = ["Trabalho", "Estudos", "Lazer", "Pessoal"]
-        
-        for expected_name in expected_names:
-            self.assertIn(expected_name, category_names)
+        # Verifica se o usuário foi criado no banco
+        self.assertTrue(User.objects.filter(username='testuser').exists())
     
     def test_user_registration_password_mismatch(self):
         """Testa registro com senhas que não coincidem"""
