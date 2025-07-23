@@ -590,8 +590,12 @@ class DashboardAPITest(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertIn('quote', response.data)
         self.assertIn('author', response.data)
-        # Deve ser uma das frases de fallback
-        fallback_authors = ['Steve Jobs', 'Winston Churchill', 'Eleanor Roosevelt']
+        # ✅ Lista atualizada com todos os autores de fallback
+        fallback_authors = [
+            'Steve Jobs', 'Winston Churchill', 'Eleanor Roosevelt',
+            'Aristotle', 'Tony Robbins', 'Albert Einstein',
+            'Theodore Roosevelt', 'Walt Disney', 'Will Rogers', 'Unknown'
+        ]
         self.assertIn(response.data['author'], fallback_authors)
     
     def test_dashboard_endpoints_require_authentication(self):
