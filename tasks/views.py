@@ -108,6 +108,8 @@ def dashboard_stats(request):
             status__in=['pending', 'in_progress']
         ).count()
         
+        # ✅ CORREÇÃO: Definir total_tasks
+        total_tasks = tasks.count()
         
         due_today_tasks = tasks.filter(due_date=today)
         print(f"🔍 Debug due_today:")
@@ -137,7 +139,7 @@ def dashboard_stats(request):
             'overdue': overdue,
             'high_priority': high_priority,
             'due_today': due_today,
-            'total_tasks': total_tasks,
+            'total_tasks': total_tasks,  # ✅ Agora está definida
             'categories_stats': categories_stats
         }
         

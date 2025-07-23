@@ -3,6 +3,7 @@ from decouple import config
 from datetime import timedelta
 import dj_database_url
 import os
+import sys  # ✅ ADICIONAR ESTA LINHA
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -162,7 +163,6 @@ if not DEBUG:
     SECURE_HSTS_PRELOAD = True
     X_FRAME_OPTIONS = 'DENY'
 
-
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
@@ -184,6 +184,7 @@ LOGGING = {
     },
 }
 
+# ✅ CONFIGURAÇÕES ESPECÍFICAS PARA TESTES (AGORA COM SYS IMPORTADO)
 if 'test' in sys.argv or 'test_coverage' in sys.argv:
     DATABASES['default'] = {
         'ENGINE': 'django.db.backends.sqlite3',
