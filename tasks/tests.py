@@ -305,17 +305,86 @@ class TaskAPITest(APITestCase):
             'priority': 'medium',
             'status': 'pending',
             'due_date': str(date.today() + timedelta(days=2)),
-            'category': self.category.pk
+            'category_name': 'work'  # ✅ Usando nome da categoria em minúsculo
         }
         
         response = self.client.post(self.task_list_url, data)
         
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(response.data['title'], 'New Task')
-        self.assertEqual(response.data['category'], self.category.pk)
+        self.assertEqual(response.data['category_name'], 'Work')  # Retorna o nome original
         
         # Verifica se foi criada no banco
         self.assertTrue(Task.objects.filter(title='New Task', user=self.user).exists())
+    
+    def test_create_task_with_uppercase_category(self):
+        """Testa criação de tarefa com nome de categoria em maiúsculo"""
+        data = {
+            'title': 'Uppercase Category Task',
+            'category_name': 'WORK'  # ✅ Testando case-insensitive
+        }
+        
+        response = self.client.post(self.task_list_url, data)
+        
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.data['category_name'], 'Work')  # Retorna o nome original
+    
+    def test_create_task_with_invalid_category(self):
+        """Testa criação de tarefa com categoria inexistente"""
+        data = {
+            'title': 'Invalid Category Task',
+            'category_name': 'nonexistent'
+        }
+        
+        response = self.client.post(self.task_list_url, data)
+        
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('category_name', response.data)
+    
+    def test_create_task_without_category(self):
+        """Testa criação de tarefa sem categoria"""
+        data = {
+            'title': 'No Category Task'
+        }
+        
+        response = self.client.post(self.task_list_url, data)
+        
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertIsNone(response.data['category_name'])
+    
+    def test_update_task_category_by_name(self):
+        """Testa atualização da categoria da tarefa usando nome"""
+        data = {
+            'category_name': 'work'
+        }
+        
+        response = self.client.patch(self.task_detail_url, data)
+        
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['category_name'], 'Work')
+        
+        # Verifica se foi atualizada no banco
+        self.task.refresh_from_db()
+        self.assertEqual(self.task.category.name, 'Work')
+    
+    def test_remove_task_category(self):
+        """Testa remoção da categoria da tarefa"""
+        # Primeiro define uma categoria
+        self.task.category = self.category
+        self.task.save()
+        
+        data = {
+            'category_name': ''  # String vazia remove a categoria
+        }
+        
+        response = self.client.patch(self.task_detail_url, data)
+        
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIsNone(response.data['category_name'])
+        
+        # Verifica se foi removida no banco
+        self.task.refresh_from_db()
+        self.assertIsNone(self.task.category)
     
     def test_create_task_minimal_data(self):
         """Testa criação de tarefa com dados mínimos"""
