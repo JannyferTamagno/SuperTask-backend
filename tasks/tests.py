@@ -37,7 +37,7 @@ class CategoryModelTest(TestCase):
     def test_category_default_color(self):
         """Testa se a cor padrão é aplicada"""
         category = Category.objects.create(
-            name='Personal',
+            name='Health',  # Nome diferente para não conflitar com categorias padrão
             user=self.user
         )
         self.assertEqual(category.color, '#007bff')
@@ -165,24 +165,33 @@ class CategoryAPITest(APITestCase):
         response = self.client.get(self.category_list_url)
         
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data['results']), 1)
-        self.assertEqual(response.data['results'][0]['name'], 'Work')
+        # Usuário deve ter 5 categorias: 4 padrão + 1 criada no setUp
+        self.assertEqual(len(response.data['results']), 5)
+        
+        # Verificar se a categoria criada no setUp está presente
+        category_names = [cat['name'] for cat in response.data['results']]
+        self.assertIn('Work', category_names)
+        
+        # Verificar se as categorias padrão estão presentes
+        default_categories = ["Trabalho", "Estudos", "Lazer", "Pessoal"]
+        for default_name in default_categories:
+            self.assertIn(default_name, category_names)
     
     def test_create_category_success(self):
         """Testa criação de categoria com dados válidos"""
         data = {
-            'name': 'Personal',
+            'name': 'Fitness',  # Nome diferente das categorias padrão
             'color': '#4CAF50'
         }
         
         response = self.client.post(self.category_list_url, data)
         
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(response.data['name'], 'Personal')
+        self.assertEqual(response.data['name'], 'Fitness')
         self.assertEqual(response.data['color'], '#4CAF50')
         
         # Verifica se foi criada no banco
-        self.assertTrue(Category.objects.filter(name='Personal', user=self.user).exists())
+        self.assertTrue(Category.objects.filter(name='Fitness', user=self.user).exists())
     
     def test_create_category_without_color(self):
         """Testa criação de categoria sem especificar cor"""
@@ -227,7 +236,7 @@ class CategoryAPITest(APITestCase):
     
     def test_user_can_only_see_own_categories(self):
         """Testa se usuário só vê suas próprias categorias"""
-        # Cria categoria para outro usuário
+        # Cria categoria para outro usuário (além das 4 padrão dele)
         Category.objects.create(
             name='Other User Category',
             user=self.other_user
@@ -235,9 +244,13 @@ class CategoryAPITest(APITestCase):
         
         response = self.client.get(self.category_list_url)
         
-        # Deve retornar apenas 1 categoria (do usuário atual)
-        self.assertEqual(len(response.data['results']), 1)
-        self.assertEqual(response.data['results'][0]['name'], 'Work')
+        # Deve retornar 5 categorias (4 padrão + 1 do setUp) do usuário atual
+        self.assertEqual(len(response.data['results']), 5)
+        
+        # Verificar que não contém categoria do outro usuário
+        category_names = [cat['name'] for cat in response.data['results']]
+        self.assertNotIn('Other User Category', category_names)
+        self.assertIn('Work', category_names)  # Categoria do setUp
 
 
 class TaskAPITest(APITestCase):

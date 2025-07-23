@@ -106,7 +106,7 @@ def dashboard_stats(request):
         in_progress = tasks.filter(status='in_progress').count()
         overdue = tasks.filter(due_date__lt=date.today()).exclude(status='completed').count()
         high_priority = tasks.filter(priority='high').exclude(status='completed').count()
-        due_today = tasks.filter(due_date=date.today()).exclude(status='completed').count()
+        due_today = tasks.filter( due_date=date.today, status__in=['pending', 'in_progress'] ).count()
         total_tasks = tasks.count()
         
         # Estatísticas por categoria
