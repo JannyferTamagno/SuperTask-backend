@@ -80,9 +80,9 @@ class TaskCreateUpdateSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         # Remove category_name dos dados validados e busca a categoria
         category_name = validated_data.pop('category_name', None)
+        user = self.context['request'].user  # ✅ Definir user antes do if
         
         if category_name:
-            user = self.context['request'].user
             category = Category.objects.get(
                 name__iexact=category_name,
                 user=user
