@@ -1,4 +1,3 @@
-# tasks/views.py
 from rest_framework import generics, status, permissions
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
@@ -40,7 +39,6 @@ class TaskListCreateView(generics.ListCreateAPIView):
     def get_queryset(self):
         queryset = Task.objects.filter(user=self.request.user)
         
-        # Filtros
         priority = self.request.query_params.get('priority')
         status_filter = self.request.query_params.get('status')
         category = self.request.query_params.get('category')
@@ -61,12 +59,10 @@ class TaskListCreateView(generics.ListCreateAPIView):
             elif due_date == 'overdue':
                 queryset = queryset.filter(due_date__lt=date.today(), status__ne='completed')
         
-        # Ordenação
         ordering = self.request.query_params.get('ordering', '-created_at')
         if ordering == 'due_date':
             queryset = queryset.order_by('due_date', '-created_at')
         elif ordering == 'priority':
-            # Ordenar por prioridade: high, medium, low
             queryset = queryset.order_by(
                 Case(
                     When(priority='high', then=1),
@@ -102,20 +98,17 @@ def dashboard_stats(request):
         tasks = Task.objects.filter(user=user)
         today = date.today()
         
-        # Estatísticas básicas - com debug
         completed = tasks.filter(status='completed').count()
         in_progress = tasks.filter(status='in_progress').count()
         overdue = tasks.filter(due_date__lt=today).exclude(status='completed').count()
         high_priority = tasks.filter(priority='high').exclude(status='completed').count()
         
-        # Corrigir due_today - usar apenas pending e in_progress
         due_today = tasks.filter(
-            due_date=today,  # ✅ Corrigido: today em vez de date.today
+            due_date=today,
             status__in=['pending', 'in_progress']
         ).count()
         
         
-        # Debug das tarefas para hoje
         due_today_tasks = tasks.filter(due_date=today)
         print(f"🔍 Debug due_today:")
         print(f"   - Total tarefas com due_date hoje: {due_today_tasks.count()}")
@@ -124,7 +117,6 @@ def dashboard_stats(request):
             print(f"   - Task: {task.title} | Status: {task.status} | Due: {task.due_date}")
         print(f"   - Due today count final: {due_today}")
         
-        # Estatísticas por categoria
         categories_stats = {}
         try:
             categories = Category.objects.filter(user=user)
@@ -166,7 +158,6 @@ def dashboard_stats(request):
 def daily_quote(request):
     """Endpoint para buscar citação diária usando API quotable.io/quotes/random"""
     
-    # Lista de citações motivacionais em inglês como backup
     fallback_quotes = [
         {
             'quote': 'The only way to do great work is to love what you do.',
@@ -183,13 +174,11 @@ def daily_quote(request):
     ]
     
     try:
-        # Usando o endpoint correto da API quotable
-        response = requests.get('https://api.quotable.io/quotes/random', timeout=10)
+        response = requests.get('http://api.quotable.io/quotes/random', timeout=10)
         
         if response.status_code == 200:
             quote_data = response.json()
             
-            # A API retorna um array, então pegamos o primeiro item
             if isinstance(quote_data, list) and len(quote_data) > 0:
                 quote_item = quote_data[0]
                 external_quote = {
@@ -198,11 +187,9 @@ def daily_quote(request):
                     'source': 'quotable_api'
                 }
                 
-                # Verifica se não é uma citação vazia
                 if external_quote['quote'] and external_quote['author']:
                     return Response(external_quote)
             
-            # Se não retornou array ou está vazio, tenta como objeto único
             elif isinstance(quote_data, dict):
                 external_quote = {
                     'quote': quote_data.get('content'),
@@ -213,21 +200,18 @@ def daily_quote(request):
                 if external_quote['quote'] and external_quote['author']:
                     return Response(external_quote)
         
-        # Se chegou aqui, a API externa falhou ou retornou dados inválidos
         import random
         selected_quote = random.choice(fallback_quotes)
         selected_quote['source'] = 'fallback'
         return Response(selected_quote)
         
     except requests.exceptions.Timeout:
-        # Timeout da API externa - usa fallback
         import random
         selected_quote = random.choice(fallback_quotes)
         selected_quote['source'] = 'fallback_timeout'
         return Response(selected_quote)
         
     except Exception as e:
-        # Qualquer outro erro - usa fallback
         import random
         selected_quote = random.choice(fallback_quotes)
         selected_quote['source'] = 'fallback_error'

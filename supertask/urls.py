@@ -60,7 +60,6 @@ def home_view(request):
 
 @csrf_exempt  
 def health_check(request):
-    """Health check endpoint"""
     return JsonResponse({
         'status': 'healthy',
         'service': 'SuperTask API',
@@ -69,7 +68,7 @@ def health_check(request):
     })
 
 urlpatterns = [
-    path('', home_view, name='home'),  # Rota da home
+    path('', home_view, name='home'), 
     path('health/', health_check, name='health_check'),
     path('admin/', admin.site.urls),
     path('api/auth/', include('accounts.urls')),

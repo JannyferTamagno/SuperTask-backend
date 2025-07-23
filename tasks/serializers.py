@@ -1,4 +1,3 @@
-# tasks/serializers.py
 from rest_framework import serializers
 from .models import Task, Category
 
@@ -40,7 +39,7 @@ class TaskSerializer(serializers.ModelSerializer):
 class TaskCreateUpdateSerializer(serializers.ModelSerializer):
     """Serializer específico para criação e atualização de tasks"""
     category_name = serializers.CharField(write_only=True, required=False, allow_blank=True)
-    category = serializers.PrimaryKeyRelatedField(read_only=True)  # Somente leitura
+    category = serializers.PrimaryKeyRelatedField(read_only=True) 
     is_overdue = serializers.ReadOnlyField()
     
     class Meta:
@@ -56,21 +55,18 @@ class TaskCreateUpdateSerializer(serializers.ModelSerializer):
         if not value:
             return value
         
-        # Converte para minúsculo para comparação
         category_name_lower = value.lower().strip()
         
-        # Busca a categoria pelo nome (case-insensitive) do usuário atual
         user = self.context['request'].user
         try:
             category = Category.objects.get(
-                name__iexact=category_name_lower,  # Case-insensitive
+                name__iexact=category_name_lower, 
                 user=user
             )
             return category_name_lower
         except Category.DoesNotExist:
             raise serializers.ValidationError(f"Categoria '{value}' não encontrada.")
         except Category.MultipleObjectsReturned:
-            # Se houver múltiplas (não deveria com unique_together), pega a primeira
             category = Category.objects.filter(
                 name__iexact=category_name_lower,
                 user=user
@@ -78,7 +74,6 @@ class TaskCreateUpdateSerializer(serializers.ModelSerializer):
             return category_name_lower
 
     def create(self, validated_data):
-        # Remove category_name dos dados validados e busca a categoria
         category_name = validated_data.pop('category_name', None)
         user = self.context['request'].user  # ✅ Definir user antes do if
         
@@ -93,11 +88,10 @@ class TaskCreateUpdateSerializer(serializers.ModelSerializer):
         return super().create(validated_data)
 
     def update(self, instance, validated_data):
-        # Remove category_name dos dados validados e busca a categoria
         category_name = validated_data.pop('category_name', None)
         
-        if category_name is not None:  # Permite string vazia para remover categoria
-            if category_name:  # Se não for string vazia
+        if category_name is not None:  
+            if category_name:   
                 user = self.context['request'].user
                 category = Category.objects.get(
                     name__iexact=category_name,
@@ -105,7 +99,6 @@ class TaskCreateUpdateSerializer(serializers.ModelSerializer):
                 )
                 validated_data['category'] = category
             else:
-                # String vazia remove a categoria
                 validated_data['category'] = None
         
         return super().update(instance, validated_data)
@@ -113,7 +106,6 @@ class TaskCreateUpdateSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         """Customiza a representação de saída"""
         data = super().to_representation(instance)
-        # Adiciona o nome da categoria na resposta
         if instance.category:
             data['category_name'] = instance.category.name
         else:

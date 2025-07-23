@@ -1,4 +1,3 @@
-# accounts/views.py
 from rest_framework import generics, status, permissions
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
@@ -18,7 +17,6 @@ class RegisterView(generics.CreateAPIView):
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
         
-        # Gerar tokens JWT
         refresh = RefreshToken.for_user(user)
         
         return Response({
@@ -84,13 +82,11 @@ def change_password(request):
     if serializer.is_valid():
         user = request.user
         
-        # Verificar senha atual
         if not user.check_password(serializer.validated_data['old_password']):
             return Response({
                 'error': 'Current password is incorrect'
             }, status=status.HTTP_400_BAD_REQUEST)
         
-        # Definir nova senha
         user.set_password(serializer.validated_data['new_password'])
         user.save()
         

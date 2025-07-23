@@ -1,11 +1,10 @@
-# tasks/models.py
 from django.db import models
 from django.contrib.auth.models import User
 from django.utils import timezone
 
 class Category(models.Model):
-    name = models.CharField(max_length=100)  # ✅ Removido unique=True
-    color = models.CharField(max_length=7, default='#007bff')  # Cor em hex
+    name = models.CharField(max_length=100)
+    color = models.CharField(max_length=7, default='#007bff')
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -13,7 +12,6 @@ class Category(models.Model):
     class Meta:
         verbose_name_plural = 'Categories'
         ordering = ['name']
-        # ✅ Adicionado: unique_together para permitir mesmo nome por usuário diferente
         unique_together = ['name', 'user']
 
     def __str__(self):
@@ -50,7 +48,6 @@ class Task(models.Model):
         return self.title
 
     def save(self, *args, **kwargs):
-        # Definir completed_at quando status muda para completed
         if self.status == 'completed' and not self.completed_at:
             self.completed_at = timezone.now()
         elif self.status != 'completed':
