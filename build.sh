@@ -1,17 +1,18 @@
-set -o errexit  # Sair se algum comando falhar
+set -o errexit  
 
-# Instalar dependências
+echo "🚀 Iniciando build..."
+
+echo "📦 Instalando dependências..."
 pip install --upgrade pip
 pip install -r requirements.txt
 
-# Executar migrações
+echo "🗃️ Executando migrações..."
 python manage.py migrate --noinput
 
-# 🧪 EXECUTAR TESTES (temporário)
 echo "🧪 Executando testes..."
-python manage.py test --verbosity=2
+python manage.py test --verbosity=2 --keepdb --noinput
 
-# Coletar arquivos estáticos
+echo "📁 Coletando arquivos estáticos..."  
 python manage.py collectstatic --noinput
 
 echo "✅ Build concluído com sucesso!"
