@@ -100,14 +100,30 @@ def dashboard_stats(request):
     
     try:
         tasks = Task.objects.filter(user=user)
+        today = date.today()
         
-        # Estatísticas básicas
+        # Estatísticas básicas - com debug
         completed = tasks.filter(status='completed').count()
         in_progress = tasks.filter(status='in_progress').count()
-        overdue = tasks.filter(due_date__lt=date.today()).exclude(status='completed').count()
+        overdue = tasks.filter(due_date__lt=today).exclude(status='completed').count()
         high_priority = tasks.filter(priority='high').exclude(status='completed').count()
-        due_today = tasks.filter( due_date=date.today, status__in=['pending', 'in_progress'] ).count()
+        
+        # Corrigir due_today - usar apenas pending e in_progress
+        due_today = tasks.filter(
+            due_date=today,  # ✅ Corrigido: today em vez de date.today
+            status__in=['pending', 'in_progress']
+        ).count()
+        
         total_tasks = tasks.count()
+        
+        # Debug das tarefas para hoje
+        due_today_tasks = tasks.filter(due_date=today)
+        print(f"🔍 Debug due_today:")
+        print(f"   - Total tarefas com due_date hoje: {due_today_tasks.count()}")
+        print(f"   - Data de hoje: {today}")
+        for task in due_today_tasks:
+            print(f"   - Task: {task.title} | Status: {task.status} | Due: {task.due_date}")
+        print(f"   - Due today count final: {due_today}")
         
         # Estatísticas por categoria
         categories_stats = {}
@@ -165,11 +181,39 @@ def daily_quote(request):
             'quote': 'The future belongs to those who believe in the beauty of their dreams.',
             'author': 'Eleanor Roosevelt'
         },
+        {
+            'quote': 'It is during our darkest moments that we must focus to see the light.',
+            'author': 'Aristotle'
+        },
+        {
+            'quote': 'The only impossible journey is the one you never begin.',
+            'author': 'Tony Robbins'
+        },
+        {
+            'quote': 'In the middle of difficulty lies opportunity.',
+            'author': 'Albert Einstein'
+        },
+        {
+            'quote': 'Believe you can and you\'re halfway there.',
+            'author': 'Theodore Roosevelt'
+        },
+        {
+            'quote': 'The way to get started is to quit talking and begin doing.',
+            'author': 'Walt Disney'
+        },
+        {
+            'quote': 'Don\'t let yesterday take up too much of today.',
+            'author': 'Will Rogers'
+        },
+        {
+            'quote': 'You learn more from failure than from success.',
+            'author': 'Unknown'
+        }
     ]
     
     try:
         # Usando o endpoint correto da API quotable
-        response = requests.get('http://api.quotable.io/quotes/random', timeout=10)
+        response = requests.get('https://api.quotable.io/quotes/random', timeout=10)
         
         if response.status_code == 200:
             quote_data = response.json()

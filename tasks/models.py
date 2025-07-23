@@ -4,7 +4,7 @@ from django.contrib.auth.models import User
 from django.utils import timezone
 
 class Category(models.Model):
-    name = models.CharField(max_length=100, unique=True)
+    name = models.CharField(max_length=100)  # ✅ Removido unique=True
     color = models.CharField(max_length=7, default='#007bff')  # Cor em hex
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -13,6 +13,8 @@ class Category(models.Model):
     class Meta:
         verbose_name_plural = 'Categories'
         ordering = ['name']
+        # ✅ Adicionado: unique_together para permitir mesmo nome por usuário diferente
+        unique_together = ['name', 'user']
 
     def __str__(self):
         return self.name
